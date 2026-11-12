@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:,">
+<title>迷你应用 · 健康体重计算器</title>
+<style>
+  :root{
+    --bg:#eef2ed;
+    --surface:#ffffff;
+    --surface-2:#f4f7f3;
+    --surface-3:#e8efe8;
+    --ink:#17201a;
+    --ink-2:#4a5a4f;
+    --ink-3:#7a8a7e;
+    --line:#dde6dd;
+    --accent:#0e7c5f;
+    --accent-dark:#0a5e48;
+    --accent-soft:#e0f0e8;
+    --blue:#2563eb;
+    --green:#14965e;
+    --amber:#d97706;
+    --red:#dc2626;
+    --blue-soft:#e6efff;
+    --green-soft:#e2f4e9;
+    --amber-soft:#fef3d8;
+    --red-soft:#fee8e8;
+    --radius:18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#111613;
+      --surface:#1a211c;
+      --surface-2:#212a23;
+      --surface-3:#2a352c;
+      --ink:#edf2ed;
+      --ink-2:#a8b8ab;
+      --ink-3:#7e8f82;
+      --line:#2e3a30;
+      --accent:#2ec49a;
+      --accent-dark:#5ddbb6;
+      --accent-soft:#17382d;
+      --blue:#6ea8ff;
+      --green:#3ecf8a;
+      --amber:#f5b84d;
+      --red:#ff7a7a;
+      --blue-soft:#1e2e4d;
+      --green-soft:#173829;
+      --amber-soft:#3d2f0e;
+      --red-soft:#3d1e1e;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+  button,[role="button"],select,input:not([type="checkbox"],[type="radio"]){min-height:44px}
+  a{color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:24px 20px 40px}
+  /* header */
+  .top{padding:10px 0 22px}
+  .top h1{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:800}
+  .top h1 span{color:var(--accent)}
+  .top p{margin:10px 0 0;color:var(--ink-2);font-size:15.5px;max-width:620px}
+  .top-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+  .chip b{color:var(--ink)}
+
+  .layout{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+  @media(max-width:860px){.layout{grid-template-columns:1fr}.top h1{font-size:27px}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .card + .card{margin-top:16px}
+  .card h2{font-size:15px;font-weight:700;margin:0 0 4px;letter-spacing:.01em}
+  .card .sub{font-size:13px;color:var(--ink-3);margin:0 0 18px}
+
+  /* form */
+  .label{font-size:13px;font-weight:700;color:var(--ink-2);margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center}
+  .label:first-of-type{margin-top:4px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--surface-2);padding:5px;border-radius:12px;border:1px solid var(--line)}
+  .seg button{border:0;background:transparent;border-radius:9px;font-size:15px;font-weight:700;color:var(--ink-2);cursor:pointer;padding:10px}
+  .seg button.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 6px rgba(0,0,0,.08);border:1px solid var(--line)}
+  .input-row{display:flex;gap:10px;align-items:stretch}
+  .numbox{flex:0 0 118px;display:flex;align-items:center;background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:0 12px;gap:4px}
+  .numbox input{width:100%;border:0;background:transparent;font-size:20px;font-weight:800;color:var(--ink);outline:none;text-align:right;padding:8px 0}
+  .numbox span{font-size:13px;font-weight:700;color:var(--ink-3);white-space:nowrap}
+  .numbox:focus-within{border-color:var(--accent)}
+  input[type=range]{flex:1;accent-color:var(--accent);min-height:44px;cursor:pointer}
+  .range-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+  .jin{font-size:12.5px;color:var(--ink-3);margin-top:4px;text-align:right}
+  .jin b{color:var(--ink-2)}
+  .activity{display:grid;gap:8px}
+  .act{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--ink)}
+  .act.active{border-color:var(--accent);background:var(--accent-soft)}
+  .act-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--ink-3);flex-shrink:0;margin-top:2px;display:grid;place-items:center}
+  .act.active .act-dot{border-color:var(--accent)}
+  .act.active .act-dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent)}
+  .act strong{font-size:14px;display:block}
+  .act small{font-size:12.5px;color:var(--ink-2);display:block;line-height:1.4;margin-top:1px}
+
+  /* results */
+  .bmi-hero{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+  .bmi-big{line-height:1}
+  .bmi-big .num{font-size:64px;font-weight:900;letter-spacing:-.04em;line-height:.95}
+  .bmi-big .unit{font-size:14px;font-weight:700;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:14px;padding:7px 12px;border-radius:999px;margin-top:10px}
+  .badge i{width:8px;height:8px;border-radius:50%;background:currentColor;display:block}
+  .insight{flex:1;min-width:220px;background:var(--surface-2);border-radius:14px;padding:16px}
+  .insight p{margin:0;font-size:14.5px;line-height:1.65}
+  .insight p + p{margin-top:8px;color:var(--ink-2);font-size:13.5px}
+
+  .gauge{margin-top:22px}
+  .gauge-track{position:relative;height:14px;border-radius:999px;display:flex;overflow:hidden}
+  .g-under{background:#7ab8ff;flex:0 0 17.3%}
+  .g-normal{background:#2fbf71;flex:0 0 20.8%}
+  .g-over{background:#f5b84d;flex:0 0 15.4%}
+  .g-obese{background:#f87171;flex:1}
+  .gauge-marker{position:absolute;top:-5px;width:24px;height:24px;margin-left:-12px;background:var(--ink);border:3px solid var(--surface);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:left .35s cubic-bezier(.2,.8,.2,1);display:grid;place-items:center;color:var(--surface);font-size:10px;font-weight:900}
+  .gauge-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-top:8px;font-variant-numeric:tabular-nums}
+  .gauge-labels{display:grid;grid-template-columns:17.3% 20.8% 15.4% 1fr;font-size:11.5px;font-weight:700;margin-top:2px}
+  .gauge-labels span:nth-child(1){color:var(--blue)} .gauge-labels span:nth-child(2){color:var(--green)} .gauge-labels span:nth-child(3){color:var(--amber)} .gauge-labels span:nth-child(4){color:var(--red);text-align:right}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+  @media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:span 2}}
+  .stat{background:var(--surface-2);border-radius:14px;padding:16px}
+  .stat label{font-size:12px;font-weight:700;color:var(--ink-3);letter-spacing:.04em;display:block}
+  .stat strong{font-size:22px;font-weight:800;letter-spacing:-.02em;display:block;margin-top:6px;line-height:1.1}
+  .stat strong small{font-size:13px;font-weight:600;color:var(--ink-3)}
+  .stat p{margin:6px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+
+  .energy{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.energy{grid-template-columns:1fr}}
+  .energy-box{border:1.5px solid var(--line);border-radius:14px;padding:16px}
+  .energy-box label{font-size:12px;font-weight:700;color:var(--ink-3)}
+  .energy-box strong{font-size:28px;font-weight:900;display:block;margin-top:4px}
+  .energy-box strong small{font-size:14px;color:var(--ink-3);font-weight:600}
+  .energy-box p{margin:6px 0 0;font-size:13px;color:var(--ink-2)}
+
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:680px){.plans{grid-template-columns:1fr}}
+  .plan{border-radius:14px;padding:16px;border:1.5px solid var(--line);background:var(--surface)}
+  .plan.featured{border-color:var(--accent);background:var(--accent-soft)}
+  .plan .tag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .plan.featured .tag{color:var(--accent)}
+  .plan h3{margin:6px 0 0;font-size:15px}
+  .plan .kcal{font-size:26px;font-weight:900;margin-top:8px;line-height:1}
+  .plan .kcal small{font-size:13px;font-weight:600;color:var(--ink-3)}
+  .plan p{font-size:12.5px;color:var(--ink-2);margin:8px 0 0;line-height:1.55}
+  .warn{margin-top:12px;font-size:13px;background:var(--amber-soft);color:var(--ink);border-radius:10px;padding:10px 12px;display:none}
+  .warn.show{display:block}
+
+  .bar-row{display:grid;grid-template-columns:86px 1fr 52px;gap:10px;align-items:center;font-size:13px;margin-top:10px}
+  .bar-row label{font-weight:600;color:var(--ink-2)}
+  .bar{height:8px;background:var(--surface-3);border-radius:999px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .3s}
+  .bar-row b{text-align:right;font-variant-numeric:tabular-nums}
+
+  details{border-top:1px solid var(--line);margin-top:18px;padding-top:14px}
+  summary{font-weight:700;font-size:13.5px;cursor:pointer;padding:6px 0;min-height:36px}
+  details p, details li{font-size:13px;color:var(--ink-2);line-height:1.7}
+  details ul{margin:6px 0;padding-left:18px}
+  .foot{font-size:12.5px;color:var(--ink-3);line-height:1.7;margin-top:20px;padding:0 4px}
+  .foot strong{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>健康体重<span>计算器</span></h1>
+    <p>填入身高、体重和日常活动量，立刻算出你的 BMI、健康体重范围、基础代谢和每天该吃多少。用的是中国成年人标准，不是欧美那套。</p>
+    <div class="top-meta">
+      <span class="chip">标准 · <b>中国 BMI 18.5–23.9</b></span>
+      <span class="chip">代谢 · <b>Mifflin-St Jeor 公式</b></span>
+      <span class="chip">实时计算 · <b>拖动即更新</b></span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- INPUTS -->
+    <section class="card" aria-label="输入你的数据">
+      <h2>你的数据</h2>
+      <p class="sub">所有计算都在本页完成，拖动滑杆结果会实时变化。</p>
+
+      <div class="label">性别 <span style="font-weight:500;color:var(--ink-3)">影响代谢与体脂估算</span></div>
+      <div class="seg" role="group" aria-label="性别">
+        <button id="sexM" class="active" onclick="setSex('m')">♂ 男</button>
+        <button id="sexF" onclick="setSex('f')">♀ 女</button>
+      </div>
+
+      <div class="label">身高</div>
+      <div class="input-row">
+        <input type="range" id="hRange" min="130" max="210" value="172" step="1" oninput="sync('h',this.value)">
+        <div class="numbox"><input id="hNum" type="number" inputmode="decimal" value="172" min="130" max="210" oninput="sync('h',this.value)"><span>cm</span></div>
+      </div>
+      <div class="range-labels"><span>130 cm</span><span>210 cm</span></div>
+
+      <div class="label">体重</div>
+      <div class="input-row">
+        <input type="range" id="wRange" min="30" max="160" value="68" step="0.5" oninput="sync('w',this.value)">
+        <div class="numbox"><input id="wNum" type="number" inputmode="decimal" value="68" min="30" max="160" step="0.5" oninput="sync('w',this.value)"><span>kg</span></div>
+      </div>
+      <div class="range-labels"><span>30 kg</span><span>160 kg</span></div>
+      <div class="jin" id="jinText">约 <b>136 斤</b></div>
+
+      <div class="label">年龄</div>
+      <div class="input-row">
+        <input type="range" id="aRange" min="14" max="90" value="32" step="1" oninput="sync('a',this.value)">
+        <div class="numbox"><input id="aNum" type="number" inputmode="numeric" value="32" min="14" max="90" oninput="sync('a',this.value)"><span>岁</span></div>
+      </div>
+      <div class="range-labels"><span>14 岁</span><span>90 岁</span></div>
+
+      <div class="label">日常活动量</div>
+      <div class="activity" id="activityList">
+        <button class="act" data-factor="1.2" onclick="setActivity(this)"><span class="act-dot"></span><span><strong>久坐为主</strong><small>办公室、几乎不运动 · 系数 1.20</small></span></button>
+        <button class="act active" data-factor="1.375" onclick="setActivity(this)"><span class="act-dot"></span><span><strong>轻度活动</strong><small>每周运动 1–3 天，或日常走动较多 · 系数 1.375</small></span></button>
+        <button class="act" data-factor="1.55" onclick="setActivity(this)"><span class="act-dot"></span><span><strong>中度活动</strong><small>每周运动 3–5 天 · 系数 1.55</small></span></button>
+        <button class="act" data-factor="1.725" onclick="setActivity(this)"><span class="act-dot"></span><span><strong>重度活动</strong><small>每周运动 6–7 天，或体力工作 · 系数 1.725</small></span></button>
+        <button class="act" data-factor="1.9" onclick="setActivity(this)"><span class="act-dot"></span><span><strong>运动员水平</strong><small>每天高强度训练或专业运动员 · 系数 1.90</small></span></button>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <div>
+      <section class="card" aria-label="BMI 结果">
+        <div class="bmi-hero">
+          <div class="bmi-big">
+            <div class="num" id="bmiNum">23.0</div>
+            <div class="unit">BMI · 身体质量指数</div>
+            <div><span class="badge" id="bmiBadge"><i></i><span id="bmiBadgeText">正常</span></span></div>
+          </div>
+          <div class="insight">
+            <p id="insightMain">你正处在健康范围内。</p>
+            <p id="insightSub"></p>
+          </div>
+        </div>
+
+        <div class="gauge" aria-hidden="true">
+          <div class="gauge-track">
+            <div class="g-under"></div><div class="g-normal"></div><div class="g-over"></div><div class="g-obese"></div>
+            <div class="gauge-marker" id="gaugeMarker">●</div>
+          </div>
+          <div class="gauge-scale"><span>14</span><span>18.5</span><span>24</span><span>28</span><span>40</span></div>
+          <div class="gauge-labels"><span>偏瘦</span><span>正常</span><span>超重</span><span>肥胖</span></div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><label>健康体重范围</label><strong id="healthyRange">54.7 – 70.7 <small>kg</small></strong><p>按 BMI 18.5–23.9 换算到你的身高</p></div>
+          <div class="stat"><label>理想体重 · BMI 21</label><strong id="idealWeight">62.1 <small>kg</small></strong><p>健康范围的中间偏稳妥位置</p></div>
+          <div class="stat"><label>距离健康范围</label><strong id="gapWeight">已在范围内</strong><p id="gapNote">保持当前体重即可</p></div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="能量消耗">
+        <h2>每天消耗多少</h2>
+        <p class="sub">先算躺着不动消耗的基础代谢，再乘上活动系数，就是你一天的总消耗。</p>
+        <div class="energy">
+          <div class="energy-box"><label>基础代谢 BMR</label><strong id="bmrVal">— <small>kcal / 天</small></strong><p>完全静息状态下，维持心跳、呼吸和体温所需的热量。</p></div>
+          <div class="energy-box"><label>每日总消耗 TDEE</label><strong id="tdeeVal">— <small>kcal / 天</small></strong><p>算上日常活动和运动后，一天实际烧掉的热量。吃等于它，体重基本不变。</p></div>
+        </div>
+
+        <h2 style="margin-top:22px">按目标吃多少</h2>
+        <p class="sub">热量缺口不用拉太大。减重每周 0.5 kg 约需每天少吃 500 kcal，是多数人能长期坚持的节奏。</p>
+        <div class="plans">
+          <div class="plan" id="planLose"><span class="tag">减脂</span><h3>稳步减重</h3><div class="kcal"><span id="kcalLose">—</span> <small>kcal / 天</small></div><p>约每周减 0.5 kg。蛋白质别砍，饿得厉害就把缺口缩小到 300 kcal。</p></div>
+          <div class="plan featured" id="planKeep"><span class="tag">当前推荐 · 维持</span><h3>保持体重</h3><div class="kcal"><span id="kcalKeep">—</span> <small>kcal / 天</small></div><p>吃到总消耗附近，体重上下浮动 1–2 kg 都算正常。</p></div>
+          <div class="plan" id="planGain"><span class="tag">增肌</span><h3>增重增肌</h3><div class="kcal"><span id="kcalGain">—</span> <small>kcal / 天</small></div><p>比总消耗多 300 kcal，配合力量训练，多出来的尽量长成肌肉。</p></div>
+        </div>
+        <div class="warn" id="calWarn">⚠️ 减脂热量已触及安全下限（女性不低于 1200、男性不低于 1500 kcal/天），已按最低值显示。不要长期吃得比这更少。</div>
+      </section>
+
+      <section class="card" aria-label="体脂估算">
+        <h2>体脂率估算</h2>
+        <p class="sub">用 BMI、年龄和性别推算（Deurenberg 公式），误差约 ±4–5%，只能看个大概，量腰围更准。</p>
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <strong style="font-size:36px;font-weight:900;letter-spacing:-.02em" id="bfVal">—%</strong>
+          <span class="badge" id="bfBadge" style="margin-top:0"><i></i><span id="bfBadgeText">—</span></span>
+        </div>
+        <div class="bar-row"><label>蛋白质目标</label><div class="bar"><i id="proteinBar" style="width:60%"></i></div><b id="proteinVal">— g</b></div>
+        <p style="font-size:13px;color:var(--ink-2);margin:10px 0 0" id="proteinNote">按体重估算的每日蛋白质建议摄入，减脂期取上限、维持期取下限即可。</p>
+
+        <details>
+          <summary>计算方法与标准说明</summary>
+          <ul>
+            <li><strong>BMI</strong> = 体重(kg) ÷ 身高(m)²。分类采用中国标准：&lt;18.5 偏瘦，18.5–23.9 正常，24.0–27.9 超重，≥28 肥胖（比 WHO 的 25 / 30 更严，因为同 BMI 下亚洲人代谢风险更高）。</li>
+            <li><strong>基础代谢</strong> 采用 Mifflin-St Jeor 公式：男 10×体重 + 6.25×身高 − 5×年龄 + 5；女 同式 −161。</li>
+            <li><strong>体脂率</strong> 采用 Deurenberg 公式估算，不等同于体脂秤或 DEXA 测量。</li>
+            <li>孕期、哺乳期、未成年人、运动员肌肉量很高的人，BMI 和上述热量不适用，请以医生建议为准。</li>
+          </ul>
+        </details>
+      </section>
+
+      <p class="foot"><strong>提醒：</strong>这个计算器给的是人群平均公式的估算值，不是医疗诊断。体重秤上的数字每天受水分、进食和作息影响浮动 1–2 kg 很正常，看周平均趋势比盯单日数字更靠谱。如果你有基础疾病、正在服药，或体重短期内无故大幅变化，请先去医院查清楚原因，再谈减重计划。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+var sex = 'm';
+var factor = 1.375;
+var state = { h: 172, w: 68, a: 32 };
+
+function $(id){ return document.getElementById(id); }
+function clamp(v, lo, hi){ v = parseFloat(v); if(isNaN(v)) return lo; return Math.min(hi, Math.max(lo, v)); }
+function fmt(n, d){ return n.toLocaleString('zh-CN',{minimumFractionDigits:d||0, maximumFractionDigits:d||0}); }
+
+function setSex(s){
+  sex = s;
+  $('sexM').classList.toggle('active', s==='m');
+  $('sexF').classList.toggle('active', s==='f');
+  calc();
+}
+function setActivity(btn){
+  document.querySelectorAll('.act').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  factor = parseFloat(btn.getAttribute('data-factor'));
+  calc();
+}
+function sync(key, val){
+  var map = { h:['hRange','hNum',130,210], w:['wRange','wNum',30,160], a:['aRange','aNum',14,90] };
+  var m = map[key];
+  var v = clamp(val, m[2], m[3]);
+  state[key] = v;
+  // only overwrite the source if clamping changed it, to avoid fighting typing
+  $(m[0]).value = v;
+  if(document.activeElement !== $(m[1])) $(m[1]).value = (key==='w' ? v : Math.round(v));
+  else if(parseFloat(val) !== v) $(m[1]).value = (key==='w' ? v : Math.round(v));
+  calc();
+}
+
+function calc(){
+  var h = state.h, w = state.w, a = state.a;
+  var hm = h/100;
+  var bmi = w / (hm*hm);
+  $('bmiNum').textContent = bmi.toFixed(1);
+  $('jinText').innerHTML = '约 <b>' + fmt(w*2) + ' 斤</b> · ' + h + ' cm';
+
+  // category (China standard)
+  var cat, color, bg, main, sub;
+  var lowW = 18.5*hm*hm, highW = 23.9*hm*hm, idealW = 21*hm*hm;
+  if(bmi < 18.5){ cat='偏瘦'; color='var(--blue)'; bg='var(--blue-soft)';
+    main='你低于健康体重范围，下限还差 ' + (lowW-w).toFixed(1) + ' kg。';
+    sub='偏瘦不等于健康：免疫力、骨密度和精力都可能受影响。优先把总热量吃够、蛋白质吃足，再配合力量训练增肌，比单纯多吃零食有用得多。';
+  } else if(bmi < 24){ cat='正常'; color='var(--green)'; bg='var(--green-soft)';
+    main='你正处在健康范围内，离理想体重 ' + idealW.toFixed(1) + ' kg ' + (w>=idealW ? '还有 '+(w-idealW).toFixed(1)+' kg 的缓冲' : '还差 '+(idealW-w).toFixed(1)+' kg') + '。';
+    sub='这个阶段不用纠结秤上的小数点。把注意力放在腰围、体能和睡眠上，每周保持运动习惯，体重自然稳得住。';
+  } else if(bmi < 28){ cat='超重'; color='var(--amber)'; bg='var(--amber-soft)';
+    main='你超出健康范围上限 ' + (w-highW).toFixed(1) + ' kg，回到范围里并不远。';
+    sub='不用节食硬扛：按下方减脂热量吃 + 每天多走 3000 步，多数人 2–3 个月就能回到正常区间。先减掉体重的 5%，血压血糖的改善就已经很明显。';
+  } else { cat='肥胖'; color='var(--red)'; bg='var(--red-soft)';
+    main='你超出健康范围上限 ' + (w-highW).toFixed(1) + ' kg，建议认真对待，但别急于求成。';
+    sub='先定一个小目标：减掉当前体重的 5–10%。这个幅度就能显著降低脂肪肝、糖尿病和关节负担的风险。如果 BMI 超过 32.5 或已有慢病，建议同步去医院营养科评估一次。';
+  }
+  var badge = $('bmiBadge');
+  badge.style.background = bg; badge.style.color = color;
+  $('bmiBadgeText').textContent = cat;
+  $('insightMain').textContent = main;
+  $('insightSub').textContent = sub;
+
+  // gauge: scale 14 -> 40
+  var pct = (bmi - 14) / (40 - 14) * 100;
+  pct = Math.max(1.5, Math.min(98.5, pct));
+  $('gaugeMarker').style.left = pct + '%';
+
+  // stats
+  $('healthyRange').innerHTML = lowW.toFixed(1) + ' – ' + highW.toFixed(1) + ' <small>kg</small>';
+  $('idealWeight').innerHTML = idealW.toFixed(1) + ' <small>kg</small>';
+  if(w < lowW){ $('gapWeight').innerHTML = '需增 ' + (lowW-w).toFixed(1) + ' <small>kg</small>'; $('gapNote').textContent = '先增到 ' + lowW.toFixed(1) + ' kg 进入健康范围'; }
+  else if(w > highW){ $('gapWeight').innerHTML = '需减 ' + (w-highW).toFixed(1) + ' <small>kg</small>'; $('gapNote').textContent = '先减到 ' + highW.toFixed(1) + ' kg 进入健康范围'; }
+  else { $('gapWeight').textContent = '已在范围内'; $('gapNote').textContent = '保持当前体重即可，上下浮动 2 kg 内正常'; }
+
+  // BMR / TDEE
+  var bmr = 10*w + 6.25*h - 5*a + (sex==='m' ? 5 : -161);
+  var tdee = bmr * factor;
+  $('bmrVal').innerHTML = fmt(Math.round(bmr)) + ' <small>kcal / 天</small>';
+  $('tdeeVal').innerHTML = fmt(Math.round(tdee)) + ' <small>kcal / 天</small>';
+
+  var floor = (sex==='f' ? 1200 : 1500);
+  var lose = Math.round(tdee - 500);
+  var hitFloor = lose < floor;
+  if(hitFloor) lose = floor;
+  $('kcalLose').textContent = fmt(lose);
+  $('kcalKeep').textContent = fmt(Math.round(tdee));
+  $('kcalGain').textContent = fmt(Math.round(tdee + 300));
+  $('calWarn').classList.toggle('show', hitFloor);
+
+  // highlight recommended plan
+  document.querySelectorAll('.plan').forEach(function(p){ p.classList.remove('featured'); p.querySelector('.tag').textContent = p.id==='planLose' ? '减脂' : (p.id==='planGain' ? '增肌' : '维持'); });
+  var rec = bmi < 18.5 ? 'planGain' : (bmi >= 24 ? 'planLose' : 'planKeep');
+  var recEl = $(rec);
+  recEl.classList.add('featured');
+  recEl.querySelector('.tag').textContent = '当前推荐 · ' + (rec==='planGain' ? '增重' : (rec==='planLose' ? '减脂' : '维持'));
+
+  // body fat (Deurenberg)
+  var bf = 1.2*bmi + 0.23*a - 10.8*(sex==='m'?1:0) - 5.4;
+  bf = Math.max(3, Math.min(60, bf));
+  $('bfVal').textContent = bf.toFixed(1) + '%';
+  var bfCat, bfColor, bfBg;
+  if(sex==='m'){
+    if(bf < 8){ bfCat='偏低'; bfColor='var(--blue)'; bfBg='var(--blue-soft)'; }
+    else if(bf <= 20){ bfCat='标准'; bfColor='var(--green)'; bfBg='var(--green-soft)'; }
+    else if(bf < 25){ bfCat='偏高'; bfColor='var(--amber)'; bfBg='var(--amber-soft)'; }
+    else { bfCat='肥胖'; bfColor='var(--red)'; bfBg='var(--red-soft)'; }
+  } else {
+    if(bf < 16){ bfCat='偏低'; bfColor='var(--blue)'; bfBg='var(--blue-soft)'; }
+    else if(bf <= 28){ bfCat='标准'; bfColor='var(--green)'; bfBg='var(--green-soft)'; }
+    else if(bf < 32){ bfCat='偏高'; bfColor='var(--amber)'; bfBg='var(--amber-soft)'; }
+    else { bfCat='肥胖'; bfColor='var(--red)'; bfBg='var(--red-soft)'; }
+  }
+  var bfb = $('bfBadge'); bfb.style.background = bfBg; bfb.style.color = bfColor;
+  $('bfBadgeText').textContent = (sex==='m' ? '男性标准 8–20%' : '女性标准 16–28%') + ' · 当前' + bfCat;
+
+  // protein: maintenance 1.2g/kg, cutting 1.8g/kg reference shown as range midpoint bar
+  var pLow = Math.round(w * 1.2), pHigh = Math.round(w * (bmi>=24 ? 1.8 : 1.6));
+  $('proteinVal').textContent = pLow + '–' + pHigh + ' g';
+  $('proteinBar').style.width = Math.min(100, pHigh/200*100) + '%';
+  $('proteinNote').textContent = '你目前约需每天 ' + pLow + '–' + pHigh + ' g 蛋白质（每 kg 体重 1.2–' + (bmi>=24?'1.8':'1.6') + ' g）。一个鸡蛋约 6 g、一盒 250 ml 牛奶约 8 g、100 g 鸡胸肉约 31 g，凑一凑并不难。';
+}
+calc();
+</script>
+</body>
+</html>
